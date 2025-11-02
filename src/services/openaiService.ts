@@ -98,15 +98,15 @@ Create realistic and detailed information in JSON format with the following stru
 }
 
 Requirements:
-1. Create 6-8 menu items with realistic names, descriptions, and prices
-2. For each menu item, provide detailed health/nutrition information including calories, macros, dietary tags, and nutrition notes
-3. Include dietary tags like: "High Protein", "Low Carb", "Heart Healthy", "Gluten-Free", "Keto-Friendly", "Vegetarian", "Vegan", "High Fiber", "Low Sodium", etc.
-4. Make the background story authentic and interesting about the restaurant's founding
-5. Ensure menu items align with the restaurant's cuisine type
-6. Price range should be realistic for the restaurant type
-7. Use JSON format only, no markdown or code blocks
-8. Similar restaurants should be in the same general area and cuisine category
-9. For "popularity": rate how trendy and currently popular this restaurant is on a scale of 0-100. Consider factors like: social media presence, recent reviews, celebrity visits, food trends, novelty, buzz around cuisine type, restaurant age, etc. A brand new trendy fusion place might be 85-95, a classic well-established place might be 60-75, an obscure place might be 20-40.
+1. Create 4-6 menu items (reduced to save tokens)
+2. Each menu item needs: name, description, price, rating, reviews, tags, healthInfo (calories, protein, carbs, fat, dietaryTags, nutritionNotes)
+3. Dietary tags: High Protein, Low Carb, Heart Healthy, Gluten-Free, Keto-Friendly, Vegetarian, Vegan, etc.
+4. Background: 1 paragraph about restaurant founding
+5. Menu items must align with cuisine type
+6. Realistic prices for restaurant type
+7. JSON only, no markdown
+8. Similar restaurants: 2-3 in same area/cuisine
+9. Popularity: 0-100 scale (85-95 trendy new, 60-75 classic, 20-40 obscure)
 
 ${tasteProfile.length > 0 ? `Consider these taste preferences: ${tasteProfile.join(', ')}` : ''}
 ${dietaryPreferences.length > 0 ? `Consider these dietary preferences: ${dietaryPreferences.join(', ')}` : ''}
@@ -132,7 +132,7 @@ ${allergens.length > 0 ? `Be mindful of these allergens: ${allergens.join(', ')}
           },
         ],
         temperature: 0.7,
-        max_tokens: 3000,
+        max_tokens: 2000,
       }),
     });
 

@@ -14,6 +14,7 @@ interface RestaurantCardProps {
   location?: string;
   priceLevel?: number;
   onClick?: () => void;
+  allowLongDescription?: boolean;
 }
 
 const getPriceDisplay = (level?: number): string => {
@@ -31,7 +32,8 @@ export function RestaurantCard({
   rating,
   location,
   priceLevel,
-  onClick 
+  onClick,
+  allowLongDescription = false
 }: RestaurantCardProps) {
   return (
     <div 
@@ -66,7 +68,7 @@ export function RestaurantCard({
         </div>
         
         {description && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
+          <p className={`text-sm text-muted-foreground ${allowLongDescription ? '' : 'line-clamp-2'}`}>
             {description}
           </p>
         )}

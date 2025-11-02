@@ -15,9 +15,19 @@ export function Search() {
   const [allergens, setAllergens] = useState<string[]>([]);
   const [showRestaurant, setShowRestaurant] = useState(false);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      // Track search interaction for flavor learning
+      const { addInteraction, extractKeywords } = await import('../services/flavorProfileService');
+      const allText = [searchQuery, location, ...tasteProfile, ...dietaryPreferences].join(' ');
+      const keywords = extractKeywords(allText);
+      addInteraction({
+        type: 'search',
+        keywords,
+        restaurantName: searchQuery,
+      });
+      
       setShowRestaurant(true);
     }
   };

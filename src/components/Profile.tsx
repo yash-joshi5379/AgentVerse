@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { Star, MapPin, Edit2, Check, X, Plus, Loader2 } from 'lucide-react';
+import { Star, MapPin, Edit2, Check, X, Plus, Loader2, Brain } from 'lucide-react';
 import { loadDefaultFavorites, addFavorite, type FavoriteRestaurant } from '../services/favoritesService';
+import { getFlavorProfile, initializeFlavorProfile, updateProfileFromInteractions } from '../services/flavorProfileService';
+import { FlavorRadarChart } from './FlavorRadarChart';
+import type { FlavorProfile } from '../services/flavorProfileService';
 
 const allCuisines = ['Japanese', 'Italian', 'Mexican', 'Thai', 'BBQ', 'Seafood', 'American', 'Chinese', 'Indian', 'Korean', 'Vietnamese', 'Mediterranean'];
 
@@ -14,8 +17,9 @@ export function Profile() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newRestaurantName, setNewRestaurantName] = useState('');
   const [addingRestaurant, setAddingRestaurant] = useState(false);
+  const [flavorProfile, setFlavorProfile] = useState<FlavorProfile | null>(null);
 
-  // Load default favorites on mount
+  // Initialize flavor profile and load favorites on mount
   useEffect(() => {
     const loadFavorites = async () => {
       setLoadingFavorites(true);
@@ -29,7 +33,42 @@ export function Profile() {
       }
     };
 
+    // Initialize flavor profile - ensure it's always set
+    try {
+      initializeFlavorProfile();
+      const profile = getFlavorProfile();
+      setFlavorProfile(profile);
+      
+      // Update profile from interactions (learn from past data)
+      updateProfileFromInteractions();
+      const updatedProfile = getFlavorProfile();
+      setFlavorProfile(updatedProfile);
+    } catch (error) {
+      console.error('Error initializing flavor profile:', error);
+      // Set default profile even if there's an error
+      setFlavorProfile({
+        spicy: 50,
+        sweet: 55,
+        salty: 52,
+        umami: 48,
+        sour: 45,
+        bitter: 40,
+        rich: 50,
+        light: 50,
+      });
+    }
+
     loadFavorites();
+  }, []);
+
+  // Refresh flavor profile periodically to show learning updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      updateProfileFromInteractions();
+      setFlavorProfile(getFlavorProfile());
+    }, 30000); // Update every 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleAddFavorite = async (e: React.FormEvent) => {
@@ -41,6 +80,18 @@ export function Profile() {
       const newFavorite = await addFavorite(newRestaurantName.trim());
       if (newFavorite) {
         setFavoriteRestaurants([...favoriteRestaurants, newFavorite]);
+        
+        // Learn from favorite addition
+        const { addInteraction, extractKeywords } = await import('../services/flavorProfileService');
+        const keywords = extractKeywords(newFavorite.name + ' ' + newFavorite.cuisine);
+        addInteraction({
+          type: 'favorite',
+          keywords,
+          restaurantName: newFavorite.name,
+        });
+        updateProfileFromInteractions();
+        setFlavorProfile(getFlavorProfile());
+        
         setNewRestaurantName('');
         setShowAddDialog(false);
       } else {
@@ -89,6 +140,62 @@ export function Profile() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Flavor Profile Radar Chart */}
+        <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(88,86,214,0.1)] transform hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-4">
+            <Brain className="w-5 h-5 text-primary" />
+            <h2>Flavor Profile</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-6">
+            Your taste preferences learned from your searches, favorites, and interactions. The AI agent updates this as you use the website.
+          </p>
+          {flavorProfile ? (
+            <>
+              <div className="w-full overflow-hidden">
+                <FlavorRadarChart profile={flavorProfile} />
+              </div>
+              <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                  <span>Spicy: {Math.round(flavorProfile.spicy)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                  <span>Sweet: {Math.round(flavorProfile.sweet)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                  <span>Salty: {Math.round(flavorProfile.salty)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                  <span>Umami: {Math.round(flavorProfile.umami)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                  <span>Sour: {Math.round(flavorProfile.sour)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                  <span>Bitter: {Math.round(flavorProfile.bitter)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                  <span>Rich: {Math.round(flavorProfile.rich)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                  <span>Light: {Math.round(flavorProfile.light)}%</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-96">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(88,86,214,0.1)] transform hover:-translate-y-1 transition-all duration-300">

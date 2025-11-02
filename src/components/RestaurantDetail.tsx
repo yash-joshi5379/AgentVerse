@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, MapPin, Clock, DollarSign, Users, Sparkles, Flame, Heart, Activity, Apple, Loader2, TrendingUp } from 'lucide-react';
+import { Star, MapPin, Clock, DollarSign, Users, Sparkles, Flame, Heart, Activity, Apple, Loader2, TrendingUp, Calendar, ExternalLink, TreePine, Film, Gamepad2, ShoppingBag, Museum, Beer } from 'lucide-react';
 import { generateRestaurantData } from '../services/openaiService';
+import { RestaurantMap } from './RestaurantMap';
 
 interface MenuItem {
   id: string;
@@ -337,6 +338,106 @@ export function RestaurantDetail({ restaurantName, location = '', tasteProfile, 
             <p className="text-foreground">{restaurant.description}</p>
             <p className="text-sm text-muted-foreground">{restaurant.background}</p>
           </div>
+
+          {/* Restaurant Location Map */}
+          <div className="mt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <MapPin className="w-5 h-5 text-primary" />
+              <h3 className="text-foreground font-semibold">Location</h3>
+            </div>
+            <RestaurantMap
+              restaurantName={restaurant.name}
+              location={restaurant.location}
+              apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            />
+          </div>
+
+          {/* Booking Information */}
+          <motion.div
+            className="mt-6 p-5 rounded-xl border-2 backdrop-blur-xl"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            style={{
+              background: restaurant.bookingRequired
+                ? 'linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)'
+                : restaurant.bookingUrl
+                ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%)'
+                : 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+              borderColor: restaurant.bookingRequired
+                ? 'rgba(249, 115, 22, 0.3)'
+                : restaurant.bookingUrl
+                ? 'rgba(59, 130, 246, 0.3)'
+                : 'rgba(34, 197, 94, 0.3)'
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
+                restaurant.bookingRequired
+                  ? 'bg-gradient-to-br from-orange-500/20 to-amber-500/20'
+                  : restaurant.bookingUrl
+                  ? 'bg-gradient-to-br from-blue-500/20 to-sky-500/20'
+                  : 'bg-gradient-to-br from-green-500/20 to-emerald-500/20'
+              }`}>
+                <Calendar className={`w-6 h-6 ${
+                  restaurant.bookingRequired
+                    ? 'text-orange-500'
+                    : restaurant.bookingUrl
+                    ? 'text-blue-500'
+                    : 'text-green-500'
+                }`} />
+              </div>
+              
+              <div className="flex-1">
+                {restaurant.bookingRequired && restaurant.bookingUrl ? (
+                  <>
+                    <h3 className="text-foreground font-semibold mb-1">Reservations Required</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      This restaurant typically requires advance reservations. Book your table to secure your spot.
+                    </p>
+                    <motion.a
+                      href={restaurant.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 py-2.5 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Book on {restaurant.bookingPlatform || 'their website'}
+                      <ExternalLink className="w-4 h-4" />
+                    </motion.a>
+                  </>
+                ) : restaurant.bookingUrl ? (
+                  <>
+                    <h3 className="text-foreground font-semibold mb-1">Book a Table (Optional)</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Walk-ins are welcome, but you can also reserve a table online to guarantee your spot.
+                    </p>
+                    <motion.a
+                      href={restaurant.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-sky-500 text-white px-5 py-2.5 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Book a Table on {restaurant.bookingPlatform || 'their website'}
+                      <ExternalLink className="w-4 h-4" />
+                    </motion.a>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-foreground font-semibold mb-1">Walk-Ins Welcome</h3>
+                    <p className="text-sm text-muted-foreground">
+                      No booking required! You can walk in anytime during their opening hours. Perfect for spontaneous dining.
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
 
           {/* Personalized Review */}
           <motion.div
