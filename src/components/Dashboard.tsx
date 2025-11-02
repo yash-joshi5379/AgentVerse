@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import { FeaturedCard } from './FeaturedCard';
 import { RestaurantCard } from './RestaurantCard';
 import { BubbleBackground } from './BubbleBackground';
+import { FindMyFoodRecommendations } from './FindMyFoodRecommendations';
 import { Loader2, Search as SearchIcon, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { generateDashboardRecommendations, type DashboardRecommendations, searchRestaurantsByPrompt, type DashboardRestaurant } from '../services/dashboardService';
+import { getFindMyFoodRecommendations, type DishRecommendation } from '../services/findMyFoodService';
 
 export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [recommendations, setRecommendations] = useState<DashboardRecommendations | null>(null);
+  const [findMyFoodRecs, setFindMyFoodRecs] = useState<DishRecommendation[]>([]);
   const [foodPreferences, setFoodPreferences] = useState<string[]>(['Japanese', 'Italian', 'Mexican', 'BBQ']);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<DashboardRestaurant[] | null>(null);
@@ -19,8 +22,13 @@ export function Dashboard() {
     const loadRecommendations = async () => {
       setLoading(true);
       try {
-        const recs = await generateDashboardRecommendations(foodPreferences);
+        // Load both standard recommendations and FindMyFood collaborative filtering
+        const [recs, findMyFoodResults] = await Promise.all([
+          generateDashboardRecommendations(foodPreferences),
+          getFindMyFoodRecommendations(1, 4) // User 1 (Josh), top 4 recommendations
+        ]);
         setRecommendations(recs);
+        setFindMyFoodRecs(findMyFoodResults);
       } catch (error) {
         console.error('Error loading dashboard recommendations:', error);
       } finally {
@@ -198,20 +206,16 @@ export function Dashboard() {
               </div>
             )}
             
-            {/* People Who Liked Your Favorites Also Liked */}
-            {recommendations.peopleWhoLikedYourFavorites.length > 0 && (
+            {/* FindMyFood Collaborative Filtering Recommendations */}
+            {findMyFoodRecs.length > 0 && (
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h2>People Who Liked Your Favorites Also Liked</h2>
+                <div className="flex flex-col mb-6">
+                  <h2>Dishes You'll Love</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Based on collaborative filtering from users with similar taste profiles
+                  </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {recommendations.peopleWhoLikedYourFavorites.map((restaurant) => (
-                    <RestaurantCard 
-                      key={restaurant.id} 
-                      {...restaurant}
-                    />
-                  ))}
-                </div>
+                <FindMyFoodRecommendations recommendations={findMyFoodRecs} />
               </div>
             )}
             
